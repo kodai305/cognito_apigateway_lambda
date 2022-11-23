@@ -33,7 +33,7 @@ export class CdkStack extends cdk.Stack {
     });
 
     // User Pool Client
-    userPool.addClient('client', {
+    const userPoolClient = userPool.addClient('client', {
       userPoolClientName: 'testUserPoolClient',
       generateSecret: false,
       oAuth: {
@@ -51,6 +51,18 @@ export class CdkStack extends cdk.Stack {
         ],
       }
     });
+
+    // Amplifyのconfigure時にidentityPoolIdが必要
+    new aws_cognito.CfnIdentityPool(this, 'identity-pool', {
+      identityPoolName: 'my-identity-pool',
+      allowUnauthenticatedIdentities: true,
+      cognitoIdentityProviders: [
+        {
+          clientId: userPoolClient.userPoolClientId,
+          providerName: userPool.userPoolProviderName,
+        },
+      ],
+    });    
 
     // lambda
     const lambdaFunc = new lambdaNodejs.NodejsFunction(this, 'HelloFunction', {
